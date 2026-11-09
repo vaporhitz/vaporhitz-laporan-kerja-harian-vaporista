@@ -114,6 +114,13 @@ const dayText=d=>!d||d.length>=7?"Setiap hari":HARI.filter(h=>d.includes(+h[0]))
 const labsOf=t=>t.photo_labels&&t.photo_labels.length>1?t.photo_labels:null;
 const parseLabs=s=>String(s||"").split(",").map(x=>x.trim()).filter(Boolean);
 let me,sel=null,pend=null,PEOPLE=[],hdate=null;
+async function withPhotos(T){
+  const ids=T.filter(t=>t.status==="todo").map(t=>t.id);if(!ids.length)return T;
+  const{data}=await db.from("task_photos").select("task_id,slot,path").in("task_id",ids);
+  const m={};(data||[]).forEach(r=>{(m[r.task_id]=m[r.task_id]||[])[r.slot-1]=r.path});
+  T.forEach(t=>{if(m[t.id])t.proof_paths=Array.from(m[t.id],x=>x||"")});
+  return T;
+}
 const addDays=(s,n)=>{const d=new Date(s+"T00:00:00Z");d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10)};
 const nav=v=>`<div class="tabs"><button class="tab ${v==="home"?"on":""}" data-view="home">Beranda</button><button class="tab ${v==="history"?"on":""}" data-view="history">Riwayat</button></div>`;
 function toast(m){const e=$("#toast");e.textContent=m;e.classList.add("on");clearTimeout(toast.h);toast.h=setTimeout(()=>e.classList.remove("on"),2200)}
@@ -143,7 +150,7 @@ function empTask(t){
 async function employee(){
   const[a,b]=await Promise.all([db.from("tasks").select("*").eq("assignee",me.id).order("status",{ascending:false}).order("due").order("id"),db.rpc("leaderboard")]);
   if(a.error||b.error)return toast("Gagal memuat data");
-  const T=a.data,L=b.data,rank=L.findIndex(x=>x.id===me.id)+1;
+  const T=await withPhotos(a.data),L=b.data,rank=L.findIndex(x=>x.id===me.id)+1;
   const V=T.filter(t=>t.status==="todo"||t.due>=today());
   const done=V.filter(t=>t.status==="done").length,pct=V.length?Math.round(done/V.length*100):0;
   app.innerHTML=head()+`<div class="card"><div class="split"><b class="big">${done}/${V.length} tugas selesai</b><b>${T.reduce((s,t)=>s+pt(t),0)} poin · peringkat ${rank?"#"+rank:"-"}</b></div><div class="bar"><i style="width:${pct}%"></i></div><div class="sub">Daftar tetap muncul otomatis setiap hari. Ketuk kotak untuk mengirim foto bukti.</div></div>
@@ -155,7 +162,7 @@ async function employee(){
 async function leader(){
   const[l,p,t,f,tp]=await Promise.all([db.rpc("leaderboard"),db.from("profiles").select("id,name").eq("role","employee").order("name"),db.from("tasks").select("*").order("due").order("id"),db.from("tasks").select("title,done_at,on_time,profiles(name)").eq("status","done").order("done_at",{ascending:false}).limit(10),db.from("task_templates").select("*").order("id")]);
   if(l.error||p.error||t.error)return toast("Gagal memuat data");
-  const L=l.data,P=p.data,T=t.data;PEOPLE=P;if(!sel||!P.find(x=>x.id===sel))sel=P[0]?.id;
+  const L=l.data,P=p.data,T=await withPhotos(t.data);PEOPLE=P;if(!sel||!P.find(x=>x.id===sel))sel=P[0]?.id;
   const done=T.filter(x=>x.status==="done").length,late=T.filter(x=>x.status==="todo"&&x.due<today()).length,mine=T.filter(x=>x.assignee===sel);
   const nm=id=>P.find(x=>x.id===id)?.name||"";const TP=tp.data||[];
   const taskRow=x=>{
@@ -190,8 +197,9 @@ async function leader(){
 
 async function history(){
   if(!hdate)hdate=addDays(today(),-1);
-  const{data,error}=await db.from("tasks").select("*,profiles(name)").eq("due",hdate).order("id");
+  const{data:raw,error}=await db.from("tasks").select("*,profiles(name)").eq("due",hdate).order("id");
   if(error)return toast("Gagal memuat riwayat");
+  const data=await withPhotos(raw);
   const by={};data.forEach(x=>{(by[x.assignee]=by[x.assignee]||{name:x.profiles?.name||"Vaporista",list:[]}).list.push(x)});
   const groups=Object.values(by).sort((a,b)=>a.name.localeCompare(b.name));
   const total=data.length,doneT=data.filter(x=>x.status==="done").length,onT=data.filter(x=>x.status==="done"&&x.on_time).length;
