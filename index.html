@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ffc400">
+<title>Tim Kerja</title>
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" href="icon-round.png">
+<meta name="apple-mobile-web-app-title" content="Vapor Hitz">
+<style>
+:root{--bg:#fffbea;--surf:#fff;--ink:#111;--mute:#5a5a5a;--line:#111;--soft:#ece6c8;--acc:#ffc400;--acc-s:#fff1b8;--chip:#f3efdc;--red:#c62828;--red-s:#fde4e2}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
+.wrap{max-width:960px;margin:0 auto;padding:16px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px;background:var(--ink);color:#fff;border-radius:16px;padding:12px 14px;border-bottom:6px solid var(--acc)}
+.hd{display:flex;align-items:center;gap:12px;min-width:0}
+.hd img{width:44px;height:44px;border-radius:50%;background:#fff;border:2px solid var(--acc);flex:none;object-fit:cover}
+h1{font-size:20px;margin:0;font-weight:800;letter-spacing:.2px}
+header h1{color:var(--acc)}
+h2{font-size:16px;margin:0 0 10px;font-weight:800;display:inline-block;background:linear-gradient(transparent 55%,var(--acc) 55%);padding:0 4px;margin-left:-4px}
+.sub{color:var(--mute);font-size:13px}
+header .sub{color:#e8e8e8}
+.card{background:var(--surf);border:2px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:4px 4px 0 var(--acc)}
+input,select{font:inherit;color:var(--ink);background:#fff;border:2px solid var(--line);border-radius:10px;padding:9px 12px;min-width:0}
+input:focus,select:focus{outline:3px solid var(--acc);outline-offset:1px}
+input::placeholder{color:#8a8a8a}
+.row{display:flex;gap:8px;flex-wrap:wrap}.row>input{flex:1}
+.btn{border:2px solid var(--line);background:var(--acc);color:var(--ink);font:inherit;font-weight:800;padding:8px 16px;border-radius:10px;cursor:pointer;box-shadow:2px 2px 0 var(--line);transition:transform .08s,box-shadow .08s}
+.btn:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--line)}
+header .btn{box-shadow:none;border-color:var(--acc)}
+.ed{border:1.5px solid var(--line);color:var(--ink);background:#fff;font:inherit;font-size:12px;font-weight:700;padding:4px 10px;border-radius:8px;cursor:pointer}
+.ed:hover{background:var(--acc-s)}
+.ed.red{border-color:var(--red);color:var(--red)}
+.ed.red:hover{background:var(--red-s)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.stat{background:#fff;border:2px solid var(--line);border-radius:16px;padding:12px}
+.stat:first-child{background:var(--acc)}
+.stat b{display:block;font-size:26px;line-height:1.2;font-weight:800}.stat span{color:var(--ink);opacity:.75;font-size:12px;font-weight:600}
+.task{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:11px 0;border-top:1px solid var(--soft)}
+.task:first-of-type{border-top:0}
+.chk{width:28px;height:28px;border-radius:8px;border:2px solid var(--line);background:#fff;color:var(--ink);font-size:18px;font-weight:800;line-height:1;cursor:pointer;flex:none}
+.task.todo .chk:hover{background:var(--acc)}
+.task.done .chk{background:var(--acc);color:var(--ink);cursor:default}
+.tt{flex:1 1 140px;overflow-wrap:anywhere;font-weight:600}.task.done .tt{color:var(--mute);text-decoration:line-through;font-weight:400}
+.tag{font-size:12px;font-weight:700;padding:2px 9px;border-radius:99px;background:var(--chip);color:var(--ink);border:1px solid var(--soft)}
+.tag.late{background:var(--red-s);color:var(--red);border-color:var(--red)}.tag.ok{background:var(--acc);color:var(--ink);border-color:var(--line)}
+.grid{display:grid;grid-template-columns:3fr 2fr;gap:14px}
+@media(max-width:760px){.grid{grid-template-columns:1fr}}
+.lb{display:flex;align-items:center;gap:10px;padding:9px 8px;border:0;border-top:1px solid var(--soft);width:100%;text-align:left;background:none;color:inherit;font:inherit;cursor:pointer;border-radius:0}
+.lb:first-of-type{border-top:0}.lb:hover{background:var(--chip)}.lb.on{background:var(--acc-s);box-shadow:inset 4px 0 0 var(--line)}
+.rk{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:13px;background:var(--chip);border:1.5px solid var(--line);flex:none}
+.rk.g{background:var(--acc)}
+.nm{flex:1;min-width:0;font-weight:700}.nm .sub{font-weight:400}.pts{font-weight:800;font-size:17px}
+ul{list-style:none;margin:0;padding:0}li{padding:8px 0;border-top:1px solid var(--soft);font-size:14px}li:first-child{border-top:0}
+.empty{color:var(--mute);padding:8px 0}
+.login{max-width:360px;margin:8vh auto;text-align:center}
+.login img{width:96px;height:96px;border-radius:50%;border:3px solid var(--line);background:#fff;margin:0 auto 10px;display:block;object-fit:cover}
+.login input{width:100%;margin-bottom:10px;text-align:left}.login .sub{margin:4px 0 14px}
+.err{color:var(--red);font-size:13px;min-height:20px;font-weight:600}
+.lbx{position:fixed;inset:0;background:rgba(0,0,0,.88);display:grid;place-items:center;padding:20px;z-index:9;cursor:pointer}
+.lbx[hidden]{display:none}.lbx img{max-width:100%;max-height:85vh;border-radius:12px;border:3px solid var(--acc)}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--acc);padding:10px 18px;border-radius:12px;font-weight:700;opacity:0;pointer-events:none;transition:opacity .2s;border:2px solid var(--acc);z-index:10}
+.toast.on{opacity:1}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<input type="file" id="fi" accept="image/*" hidden>
+<div class="lbx" id="lbx" hidden><img id="lbi" alt="Foto bukti"></div>
+<div class="toast" id="toast" role="status"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+/* ========== ISI DUA BARIS INI (Supabase > Project Settings > API) ========== */
+const SUPABASE_URL="https://siakzuowzhjxvefjwvig.supabase.co";
+const SUPABASE_KEY="sb_publishable_brOfPR3TwnZfah0tWL8yKQ_qP8fz25p";
+const POIN={selesai:10,bonus:5}; // samakan dengan angka di supabase-setup.sql
+/* ========================================================================== */
+const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const $=s=>document.querySelector(s),app=$("#app");
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const today=()=>new Date().toLocaleDateString("en-CA",{timeZone:"Asia/Jakarta"});
+const fmt=d=>new Date(d+"T00:00").toLocaleDateString("id-ID",{day:"numeric",month:"short"});
+let me,sel=null,pend=null;
+function toast(m){const e=$("#toast");e.textContent=m;e.classList.add("on");clearTimeout(toast.h);toast.h=setTimeout(()=>e.classList.remove("on"),2200)}
+const head=()=>`<header><div class="hd"><img src="icon-round.png" alt=""><div><h1>Tim Kerja</h1><div class="sub">${esc(me.name)} · ${me.role==="leader"?"Leader":"Vaporista"}</div></div></div><button class="btn" data-out>Keluar</button></header>`;
+const pt=t=>t.status==="done"?POIN.selesai+(t.on_time?POIN.bonus:0):0;
+const tag=t=>t.status==="done"?`<span class="tag ok">Terverifikasi</span>`:`<span class="tag ${t.due<today()?"late":""}">${t.due<today()?"Terlambat · ":""}${fmt(t.due)}</span>`;
+
+async function boot(){
+  const{data:{session}}=await db.auth.getSession();if(!session)return login();
+  const{data,error}=await db.from("profiles").select("*").eq("id",session.user.id).single();
+  if(error||!data)return login("Profil tidak ditemukan. Hubungi leader.");
+  me=data;await db.rpc("generate_daily_tasks");me.role==="leader"?leader():employee();
+}
+function login(msg=""){
+  app.innerHTML=`<div class="card login"><img src="icon-round.png" alt="Vapor Hitz"><h1>Masuk</h1><p class="sub">Selamat datang! Masuk dulu untuk lihat tugasmu hari ini.</p><input id="em" type="email" placeholder="Email" autocomplete="username"><input id="pw" type="password" placeholder="Kata sandi" autocomplete="current-password"><div class="err" id="er">${esc(msg)}</div><button class="btn" data-in style="width:100%">Masuk</button></div>`;
+}
+
+async function employee(){
+  const[a,b]=await Promise.all([db.from("tasks").select("*").eq("assignee",me.id).order("status",{ascending:false}).order("due"),db.rpc("leaderboard")]);
+  if(a.error||b.error)return toast("Gagal memuat data");
+  const T=a.data,L=b.data,done=T.filter(t=>t.status==="done").length,rank=L.findIndex(x=>x.id===me.id)+1;
+  app.innerHTML=head()+`<div class="stats"><div class="stat"><b>${done}/${T.length}</b><span>Tugas selesai</span></div><div class="stat"><b>${T.reduce((s,t)=>s+pt(t),0)}</b><span>Poin saya</span></div><div class="stat"><b>${rank?"#"+rank:"-"}</b><span>Peringkat tim</span></div></div>
+  <div class="grid"><div class="card"><h2>Tugas saya</h2><p class="sub">Ketuk + untuk mengunggah foto bukti. Tanpa foto, tugas tidak dihitung.</p>${T.length?T.map(t=>`<div class="task ${t.status}"><button class="chk" ${t.status==="todo"?`data-up="${t.id}" aria-label="Unggah bukti"`:"disabled"}>${t.status==="done"?"✓":"+"}</button><span class="tt">${esc(t.title)}</span>${tag(t)}</div>`).join(""):'<div class="empty">Belum ada tugas.</div>'}</div>
+  <div class="card"><h2>Leaderboard</h2>${L.map((p,i)=>`<div class="lb" style="cursor:default"><span class="rk ${i<3?"g":""}">${i+1}</span><span class="nm">${esc(p.name)}${p.id===me.id?" (saya)":""}<div class="sub">${p.done}/${p.total} tugas</div></span><span class="pts">${p.points}</span></div>`).join("")}</div></div>`;
+}
+
+async function leader(){
+  const[l,p,t,f,tp]=await Promise.all([db.rpc("leaderboard"),db.from("profiles").select("id,name").eq("role","employee").order("name"),db.from("tasks").select("*").order("due"),db.from("tasks").select("title,done_at,on_time,profiles(name)").eq("status","done").order("done_at",{ascending:false}).limit(10),db.from("task_templates").select("*").order("id")]);
+  if(l.error||p.error||t.error)return toast("Gagal memuat data");
+  const L=l.data,P=p.data,T=t.data;if(!sel||!P.find(x=>x.id===sel))sel=P[0]?.id;
+  const done=T.filter(x=>x.status==="done").length,late=T.filter(x=>x.status==="todo"&&x.due<today()).length,mine=T.filter(x=>x.assignee===sel);
+  const nm=id=>P.find(x=>x.id===id)?.name||"";const TP=(tp.data||[]).filter(x=>x.assignee===sel);
+  app.innerHTML=head()+`<div class="stats"><div class="stat"><b>${done}/${T.length}</b><span>Tugas tim selesai</span></div><div class="stat"><b>${T.length?Math.round(done/T.length*100):0}%</b><span>Progres tim</span></div><div class="stat"><b style="color:var(--red)">${late}</b><span>Terlambat</span></div></div>
+  <div class="grid"><div><div class="card"><h2>Leaderboard</h2>${L.length?L.map((x,i)=>`<button class="lb ${x.id===sel?"on":""}" data-p="${x.id}"><span class="rk ${i<3?"g":""}">${i+1}</span><span class="nm">${esc(x.name)}<div class="sub">${x.done}/${x.total} tugas</div></span><span class="pts">${x.points}</span></button>`).join(""):'<div class="empty">Belum ada karyawan.</div>'}</div>
+  <div class="card"><h2>Tugas ${esc(nm(sel))}</h2>${mine.length?mine.map(x=>`<div class="task ${x.status}"><span class="tt">${esc(x.title)}</span>${tag(x)}<button class="ed" data-e="${x.id}">Ubah</button><button class="ed" data-d="${x.id}">Hapus</button>${x.status==="done"?`<button class="ed" data-v="${x.proof_path}">Bukti</button><button class="ed red" data-r="${x.id}" data-path="${x.proof_path}">Tolak</button>`:""}</div>`).join(""):'<div class="empty">Belum ada tugas.</div>'}</div></div>
+  <div><div class="card"><h2>Beri tugas</h2><div class="row"><select id="na">${P.map(x=>`<option value="${x.id}" ${x.id===sel?"selected":""}>${esc(x.name)}</option>`).join("")}</select><input id="nt" placeholder="Judul tugas"><input id="nd" type="date" value="${today()}"><button class="btn" data-add>Tambah</button></div></div>
+  <div class="card"><h2>Tugas rutin harian</h2><p class="sub">Isi sekali, muncul otomatis setiap hari.</p><div class="row"><select id="rn"><option value="all">Semua Vaporista</option>${P.map(x=>`<option value="${x.id}" ${x.id===sel?"selected":""}>${esc(x.name)}</option>`).join("")}</select><input id="rt" placeholder="Judul tugas rutin"><button class="btn" data-addtpl>Tambah</button></div><h2 style="margin-top:14px">Rutin ${esc(nm(sel))}</h2>${TP.length?TP.map(x=>`<div class="task"><span class="tt">${esc(x.title)}</span><button class="ed" data-te="${x.id}">Ubah</button><button class="ed red" data-td="${x.id}">Hapus</button></div>`).join(""):'<div class="empty">Belum ada tugas rutin.</div>'}</div>
+  <div class="card"><h2>Aktivitas terbaru</h2><ul>${(f.data||[]).map(x=>`<li><b>${esc(x.profiles?.name)}</b> menyelesaikan “${esc(x.title)}” ${x.on_time?"":'<span class="tag late">terlambat</span>'}<div class="sub">${new Date(x.done_at).toLocaleString("id-ID",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}</div></li>`).join("")||'<div class="empty">Belum ada aktivitas.</div>'}</ul></div></div></div>`;
+}
+
+function shrink(f){return new Promise((ok,no)=>{const im=new Image();im.onload=()=>{const s=Math.min(1,900/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=im.width*s;c.height=im.height*s;c.getContext("2d").drawImage(im,0,0,c.width,c.height);c.toBlob(b=>b?ok(b):no(Error("Gambar gagal diproses")),"image/jpeg",.75)};im.onerror=()=>no(Error("File bukan gambar"));im.src=URL.createObjectURL(f)})}
+async function upload(id,file){
+  try{const blob=await shrink(file),path=`${me.id}/${id}-${Date.now()}.jpg`;
+    let r=await db.storage.from("proofs").upload(path,blob,{contentType:"image/jpeg"});if(r.error)throw r.error;
+    r=await db.from("tasks").update({status:"done",proof_path:path}).eq("id",id);if(r.error)throw r.error;
+    toast("Bukti terkirim");employee();
+  }catch(e){toast("Gagal: "+e.message)}
+}
+$("#fi").onchange=e=>{const f=e.target.files[0];e.target.value="";if(f&&pend)upload(pend,f)};
+$("#lbx").onclick=e=>e.currentTarget.hidden=true;
+
+app.onclick=async e=>{
+  const g=k=>e.target.closest(`[data-${k}]`);
+  if(g("in")){const{error}=await db.auth.signInWithPassword({email:$("#em").value.trim(),password:$("#pw").value});return error?$("#er").textContent="Email atau kata sandi salah":boot()}
+  if(g("out")){await db.auth.signOut();return login()}
+  if(g("up")){pend=+g("up").dataset.up;return $("#fi").click()}
+  if(g("p")){sel=g("p").dataset.p;return leader()}
+  if(g("add")){const title=$("#nt").value.trim();if(!title)return toast("Isi judul tugas");
+    const{error}=await db.from("tasks").insert({assignee:$("#na").value,title,due:$("#nd").value});sel=$("#na").value;toast(error?"Gagal: "+error.message:"Tugas ditambahkan");return leader()}
+  if(g("addtpl")){const title=$("#rt").value.trim();if(!title)return toast("Isi judul tugas rutin");const w=$("#rn").value;
+    const ids=w==="all"?(await db.from("profiles").select("id").eq("role","employee")).data.map(x=>x.id):[w];
+    const{error}=await db.from("task_templates").insert(ids.map(a=>({assignee:a,title})));
+    if(w!=="all")sel=w;if(!error)await db.rpc("generate_daily_tasks");toast(error?"Gagal: "+error.message:"Tugas rutin ditambahkan");return leader()}
+  if(g("te")){const id=+g("te").dataset.te,t=(await db.from("task_templates").select("title").eq("id",id).single()).data;const title=prompt("Judul tugas rutin:",t.title);if(!title||!title.trim())return;
+    const{error}=await db.from("task_templates").update({title:title.trim()}).eq("id",id);if(!error)await db.from("tasks").update({title:title.trim()}).eq("template_id",id).eq("status","todo").gte("due",today());
+    toast(error?"Gagal: "+error.message:"Tugas rutin diperbarui");return leader()}
+  if(g("td")){if(!confirm("Hapus tugas rutin ini? Tugas hari ini yang belum selesai ikut dihapus."))return;const id=+g("td").dataset.td;
+    await db.from("tasks").delete().eq("template_id",id).eq("status","todo").gte("due",today());
+    const{error}=await db.from("task_templates").delete().eq("id",id);toast(error?"Gagal: "+error.message:"Tugas rutin dihapus");return leader()}
+  if(g("e")){const id=+g("e").dataset.e,t=(await db.from("tasks").select("title,due").eq("id",id).single()).data;
+    const title=prompt("Judul tugas:",t.title);if(title===null)return;const due=prompt("Tenggat (YYYY-MM-DD):",t.due);if(due===null)return;
+    const upd={};if(title.trim())upd.title=title.trim();if(/^\d{4}-\d{2}-\d{2}$/.test(due.trim()))upd.due=due.trim();
+    const{error}=await db.from("tasks").update(upd).eq("id",id);toast(error?"Gagal: "+error.message:"Tugas diperbarui");return leader()}
+  if(g("d")){if(!confirm("Hapus tugas ini?"))return;const{error}=await db.from("tasks").delete().eq("id",+g("d").dataset.d);toast(error?"Gagal: "+error.message:"Tugas dihapus");return leader()}
+  if(g("v")){const{data,error}=await db.storage.from("proofs").createSignedUrl(g("v").dataset.v,300);if(error)return toast("Foto tidak bisa dibuka");$("#lbi").src=data.signedUrl;return $("#lbx").hidden=false}
+  if(g("r")){const b=g("r");if(!confirm("Tolak bukti dan kembalikan tugas?"))return;
+    const{error}=await db.from("tasks").update({status:"todo",proof_path:null,done_at:null,on_time:null}).eq("id",+b.dataset.r);
+    if(!error)await db.storage.from("proofs").remove([b.dataset.path]);toast(error?"Gagal: "+error.message:"Bukti ditolak");return leader()}
+};
+boot();
+</script>
+</body>
+</html>
