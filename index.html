@@ -77,6 +77,10 @@ ul{list-style:none;margin:0;padding:0}li{padding:8px 0;border-top:1px solid var(
 .days{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 4px}
 .dy{display:flex;align-items:center;gap:6px;border:2px solid var(--line);border-radius:10px;padding:6px 10px;font-weight:700;font-size:13px;background:#fff;cursor:pointer}
 .note{background:var(--ink);color:#fff;border-radius:14px;padding:12px;font-size:13px;line-height:1.5;margin-bottom:14px}
+.tabs{display:flex;gap:8px;margin-bottom:14px}
+.tab{flex:1;border:2px solid var(--line);background:#fff;color:var(--ink);font:inherit;font-weight:800;padding:10px;border-radius:12px;cursor:pointer}
+.tab.on{background:var(--acc);box-shadow:2px 2px 0 var(--line)}
+.hist .task.done .tt{text-decoration:none;color:var(--ink);font-weight:700}
 .login{max-width:360px;margin:8vh auto;text-align:center}
 .login img{width:96px;height:96px;border-radius:50%;border:3px solid var(--line);background:#fff;margin:0 auto 10px;display:block;object-fit:cover}
 .login input{width:100%;margin-bottom:10px;text-align:left}.login .sub{margin:4px 0 14px}
@@ -109,7 +113,9 @@ const HARI=[["1","Sen"],["2","Sel"],["3","Rab"],["4","Kam"],["5","Jum"],["6","Sa
 const dayText=d=>!d||d.length>=7?"Setiap hari":HARI.filter(h=>d.includes(+h[0])).map(h=>h[1]).join(", ");
 const labsOf=t=>t.photo_labels&&t.photo_labels.length>1?t.photo_labels:null;
 const parseLabs=s=>String(s||"").split(",").map(x=>x.trim()).filter(Boolean);
-let me,sel=null,pend=null,PEOPLE=[];
+let me,sel=null,pend=null,PEOPLE=[],hdate=null;
+const addDays=(s,n)=>{const d=new Date(s+"T00:00:00Z");d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10)};
+const nav=v=>`<div class="tabs"><button class="tab ${v==="home"?"on":""}" data-view="home">Beranda</button><button class="tab ${v==="history"?"on":""}" data-view="history">Riwayat</button></div>`;
 function toast(m){const e=$("#toast");e.textContent=m;e.classList.add("on");clearTimeout(toast.h);toast.h=setTimeout(()=>e.classList.remove("on"),2200)}
 const head=()=>`<header><div class="hd"><img src="icon-round.png" alt=""><div><h1>Laporan Kerja Harian</h1><div class="sub">Halo, ${esc(me.name)} · ${me.role==="leader"?"Leader":"Vaporista"}</div><div class="sub">${dstr()}</div></div></div><button class="btn" data-out>Keluar</button></header>`;
 const pt=t=>t.status==="done"?POIN.selesai+(t.on_time?POIN.bonus:0):0;
@@ -163,7 +169,7 @@ async function leader(){
     const labs=labsOf(x);
     return `<div class="task"><span class="tt">${esc(x.title)}<div class="sub">${x.assignee?esc(nm(x.assignee)||"Vaporista"):"Semua Vaporista"} · ${dayText(x.days)} · ${labs?labs.length+" foto: "+labs.map(y=>esc(y)).join(", "):"1 foto"}</div></span><button class="ed" data-te="${x.id}">Ubah</button><button class="ed red" data-td="${x.id}">Hapus</button></div>`;
   };
-  app.innerHTML=head()+`<div class="stats"><div class="stat"><b>${done}/${T.length}</b><span>Tugas tim selesai</span></div><div class="stat"><b>${T.length?Math.round(done/T.length*100):0}%</b><span>Progres tim</span></div><div class="stat"><b style="color:var(--red)">${late}</b><span>Terlambat</span></div></div>
+  app.innerHTML=head()+nav("home")+`<div class="stats"><div class="stat"><b>${done}/${T.length}</b><span>Tugas tim selesai</span></div><div class="stat"><b>${T.length?Math.round(done/T.length*100):0}%</b><span>Progres tim</span></div><div class="stat"><b style="color:var(--red)">${late}</b><span>Terlambat</span></div></div>
   <div class="grid"><div><div class="card"><h2>Leaderboard</h2>${L.length?L.map((x,i)=>`<button class="lb ${x.id===sel?"on":""}" data-p="${x.id}"><span class="rk ${i<3?"g":""}">${i+1}</span><span class="nm">${esc(x.name)}<div class="sub">${x.done}/${x.total} tugas</div></span><span class="pts">${x.points}</span></button>`).join(""):'<div class="empty">Belum ada karyawan.</div>'}</div>
   <div class="card"><h2>Tugas ${esc(nm(sel))}</h2>${mine.length?mine.map(taskRow).join(""):'<div class="empty">Belum ada tugas.</div>'}</div></div>
   <div><div class="card" id="fm"><h2>Tambah tugas</h2>
@@ -180,6 +186,28 @@ async function leader(){
     <button class="btn" data-add style="width:100%">Tambah</button></div>
   <div class="card"><h2>Daftar tugas tetap</h2><p class="sub">Muncul otomatis setiap hari untuk Vaporista yang dipilih. Vaporista baru langsung ikut menerima tugas "Semua Vaporista".</p>${TP.length?TP.map(tplRow).join(""):'<div class="empty">Belum ada tugas tetap.</div>'}</div>
   <div class="card"><h2>Aktivitas terbaru</h2><ul>${(f.data||[]).map(x=>`<li><b>${esc(x.profiles?.name)}</b> menyelesaikan “${esc(x.title)}” ${x.on_time?"":'<span class="tag late">terlambat</span>'}<div class="sub">${new Date(x.done_at).toLocaleString("id-ID",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}</div></li>`).join("")||'<div class="empty">Belum ada aktivitas.</div>'}</ul></div></div></div>`;
+}
+
+async function history(){
+  if(!hdate)hdate=addDays(today(),-1);
+  const{data,error}=await db.from("tasks").select("*,profiles(name)").eq("due",hdate).order("id");
+  if(error)return toast("Gagal memuat riwayat");
+  const by={};data.forEach(x=>{(by[x.assignee]=by[x.assignee]||{name:x.profiles?.name||"Vaporista",list:[]}).list.push(x)});
+  const groups=Object.values(by).sort((a,b)=>a.name.localeCompare(b.name));
+  const total=data.length,doneT=data.filter(x=>x.status==="done").length,onT=data.filter(x=>x.status==="done"&&x.on_time).length;
+  const label=new Date(hdate+"T00:00").toLocaleDateString("id-ID",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+  const row=x=>{
+    const labs=labsOf(x),list=(x.proof_paths||[]).map((pp,i)=>[pp,i]).filter(z=>z[0]);
+    const shown=list.length?list:(x.proof_path?[[x.proof_path,0]]:[]);
+    const time=x.done_at?new Date(x.done_at).toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit",timeZone:"Asia/Jakarta"}):"";
+    const st=x.status==="done"?`<span class="tag ok">Selesai · ${time}</span><span class="tag ${x.on_time?"":"late"}">${x.on_time?"Tepat waktu":"Terlambat"}</span>`:`<span class="tag late">Belum selesai</span>`+(list.length?`<span class="tag">${list.length}/${labs?labs.length:1} foto</span>`:"");
+    const proofs=shown.map(z=>`<button class="ed" data-v="${esc(z[0])}">Bukti${shown.length>1?" "+(labs&&labs[z[1]]?esc(labs[z[1]]):z[1]+1):""}</button>`).join("");
+    return `<div class="task ${x.status}"><span class="tt">${esc(x.title)}${labs?`<div class="sub">${labs.length} foto: ${labs.map(y=>esc(y)).join(", ")}</div>`:""}</span>${st}${proofs}</div>`;
+  };
+  app.innerHTML=head()+nav("history")+`<div class="card"><h2>Pilih tanggal</h2><div class="row"><button class="ed" data-hdn="-1">‹ Sebelumnya</button><input id="hd" type="date" value="${hdate}"><button class="ed" data-hdn="1">Berikutnya ›</button></div><div class="row" style="margin-top:8px"><button class="ed" data-hdt="-1">Kemarin</button><button class="ed" data-hdt="0">Hari ini</button></div></div>
+  <h2 style="margin-bottom:12px">${label}</h2>
+  ${total?`<div class="stats"><div class="stat"><b>${doneT}/${total}</b><span>Tugas selesai</span></div><div class="stat"><b>${onT}</b><span>Tepat waktu</span></div><div class="stat"><b style="color:var(--red)">${total-doneT}</b><span>Belum selesai</span></div></div>
+  <div class="hist">${groups.map(g=>{const d=g.list.filter(x=>x.status==="done").length;return `<div class="card"><h2>${esc(g.name)}</h2><div class="sub" style="margin-bottom:6px">${d}/${g.list.length} tugas selesai</div>${g.list.map(row).join("")}</div>`}).join("")}</div>`:`<div class="card"><div class="empty">Belum ada laporan di tanggal ini. Laporan mulai tersimpan sejak tugas pertama dibuat.</div></div>`}`;
 }
 
 function syncForm(){
@@ -200,6 +228,9 @@ $("#lbx").onclick=e=>e.currentTarget.hidden=true;
 app.onclick=async e=>{
   const g=k=>e.target.closest(`[data-${k}]`);
   if(g("sync"))return syncForm();
+  if(g("view"))return g("view").dataset.view==="history"?history():leader();
+  if(g("hdn")){hdate=addDays(hdate||today(),+g("hdn").dataset.hdn);return history()}
+  if(g("hdt")){hdate=addDays(today(),+g("hdt").dataset.hdt);return history()}
   if(g("in")){const{error}=await db.auth.signInWithPassword({email:$("#em").value.trim(),password:$("#pw").value});return error?$("#er").textContent="Email atau kata sandi salah":boot()}
   if(g("out")){await db.auth.signOut();return login()}
   if(g("up")){const b=g("up");pend={id:+b.dataset.up,slot:+b.dataset.slot||1};return $("#fi").click()}
@@ -248,6 +279,7 @@ app.onclick=async e=>{
     if(!error&&files.length)await db.storage.from("proofs").remove(files);
     toast(error?"Gagal: "+error.message:"Bukti ditolak");return leader()}
 };
+app.onchange=e=>{if(e.target.id==="hd"&&e.target.value){hdate=e.target.value;history()}};
 boot();
 </script>
 </body>
