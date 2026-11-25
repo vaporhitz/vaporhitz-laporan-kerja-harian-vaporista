@@ -92,6 +92,12 @@ ul{list-style:none;margin:0;padding:0}li{padding:8px 0;border-top:1px solid var(
 .extra{width:100%;padding-left:56px}
 .cash{background:var(--acc-s);border:2px solid var(--line);border-radius:12px;padding:10px}
 .crow{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.pop{position:fixed;inset:0;background:rgba(0,0,0,.72);display:grid;place-items:center;padding:20px;z-index:11}
+.popc{background:#fff;border:3px solid var(--line);border-radius:20px;box-shadow:6px 6px 0 var(--acc);padding:24px 20px;max-width:360px;width:100%;text-align:center;animation:popin .35s ease-out}
+.popc h2{font-size:22px;margin:8px 0 6px}
+.popc p{margin:8px 0 12px;font-size:15px}
+.popi{font-size:60px;line-height:1}
+@keyframes popin{from{transform:scale(.8);opacity:0}to{transform:scale(1);opacity:1}}
 .hk{width:30px;height:30px;border:2px solid var(--line);border-radius:8px;background:#fff;display:grid;place-items:center;font-weight:800;flex:none}
 .hk.on{background:var(--acc)}
 .crow label{width:96px;font-size:13px;font-weight:700;flex:none}
@@ -170,6 +176,22 @@ function empTask(t){
   return `<div class="task ${t.status}">${lead}<span class="tt">${esc(t.title)}${info?`<div class="sub">${info}</div>`:""}</span>${tag(t)}${slots}${t.kind==="cash"?cashBox(t):""}</div>`;
 }
 
+const PESAN=[
+  "Semua tugas hari ini beres. Terima kasih sudah kerja keras, istirahat dulu ya!",
+  "Kerja kamu rapi dan tepat waktu. Tim Vapor Hitz bangga sama kamu!",
+  "Satu hari lagi dilewati dengan baik. Kamu keren, pertahankan!",
+  "Tugas beres, kepala tenang. Selamat, kamu luar biasa hari ini!",
+  "Konsisten tiap hari itu kuncinya, dan kamu sudah membuktikannya. Mantap!",
+  "Hebat! Semua tugas selesai. Sampai ketemu besok dengan semangat yang sama."
+];
+function celebrate(points){
+  const k="vh-semangat-"+me.id+"-"+today();
+  try{if(localStorage.getItem(k))return;localStorage.setItem(k,"1")}catch(e){}
+  const d=document.createElement("div");d.className="pop";
+  d.innerHTML=`<div class="popc"><div class="popi">🎉</div><h2>Mantap, ${esc(me.name)}!</h2><p>${esc(PESAN[Math.floor(Math.random()*PESAN.length)])}</p><span class="tag ok">Semua tugas selesai · ${points} poin</span><button class="btn" style="width:100%;margin-top:16px">Terima kasih!</button></div>`;
+  d.onclick=e=>{if(e.target===d||e.target.closest(".btn"))d.remove()};
+  document.body.appendChild(d);
+}
 async function employee(){
   const[a,b]=await Promise.all([db.from("tasks").select("*").eq("assignee",me.id).order("status",{ascending:false}).order("due").order("id"),db.rpc("leaderboard")]);
   if(a.error||b.error)return toast("Gagal memuat data");
@@ -180,6 +202,7 @@ async function employee(){
   <div class="grid"><div class="card"><h2>Tugas hari ini</h2>${V.length?V.map(empTask).join(""):'<div class="empty">Belum ada tugas.</div>'}</div>
   <div class="card"><h2>Leaderboard</h2>${L.map((p,i)=>`<div class="lb" style="cursor:default"><span class="rk ${i<3?"g":""}">${i+1}</span><span class="nm">${esc(p.name)}${p.id===me.id?" (saya)":""}<div class="sub">${p.done}/${p.total} tugas</div></span><span class="pts">${p.points}</span></div>`).join("")}</div></div>
   <div class="note">Tugas yang wajib foto dihitung selesai setelah semua fotonya terkirim.</div>`;
+  if(V.length&&done===V.length)celebrate(T.reduce((s,t)=>s+pt(t),0));
 }
 
 async function leader(){
