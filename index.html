@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#ffc400">
-<title>Laporan Kerja Harian</title>
+<title>To-Do Harian Vaporista</title>
 <link rel="apple-touch-icon" href="icon.png">
 <link rel="icon" href="icon-round.png">
 <meta name="apple-mobile-web-app-title" content="Vapor Hitz">
@@ -124,7 +124,7 @@ async function withPhotos(T){
 const addDays=(s,n)=>{const d=new Date(s+"T00:00:00Z");d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10)};
 const nav=v=>`<div class="tabs"><button class="tab ${v==="home"?"on":""}" data-view="home">Beranda</button><button class="tab ${v==="history"?"on":""}" data-view="history">Riwayat</button></div>`;
 function toast(m){const e=$("#toast");e.textContent=m;e.classList.add("on");clearTimeout(toast.h);toast.h=setTimeout(()=>e.classList.remove("on"),2200)}
-const head=()=>`<header><div class="hd"><img src="icon-round.png" alt=""><div><h1>Laporan Kerja Harian</h1><div class="sub">Halo, ${esc(me.name)} · ${me.role==="leader"?"Leader":"Vaporista"}</div><div class="sub">${dstr()}</div></div></div><button class="btn" data-out>Keluar</button></header>`;
+const head=()=>`<header><div class="hd"><img src="icon-round.png" alt=""><div><h1>To-Do Harian Vaporista</h1><div class="sub"><b>${esc(me.name)}</b> · ${me.role==="leader"?"Leader":"Vaporista"}</div><div class="sub">${dstr()}</div></div></div><button class="btn" data-out>Keluar</button></header>`;
 const pt=t=>t.status==="done"?POIN.selesai+(t.on_time?POIN.bonus:0):0;
 const tag=t=>t.status==="done"?`<span class="tag ok">Terverifikasi</span>`:`<span class="tag ${t.due<today()?"late":""}">${t.due<today()?"Terlambat · ":""}${fmt(t.due)}</span>`;
 
