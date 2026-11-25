@@ -92,7 +92,9 @@ ul{list-style:none;margin:0;padding:0}li{padding:8px 0;border-top:1px solid var(
 .extra{width:100%;padding-left:56px}
 .cash{background:var(--acc-s);border:2px solid var(--line);border-radius:12px;padding:10px}
 .crow{display:flex;align-items:center;gap:8px;margin-bottom:6px}
-.crow label{width:104px;font-size:13px;font-weight:700;flex:none}
+.hk{width:30px;height:30px;border:2px solid var(--line);border-radius:8px;background:#fff;display:grid;place-items:center;font-weight:800;flex:none}
+.hk.on{background:var(--acc)}
+.crow label{width:96px;font-size:13px;font-weight:700;flex:none}
 .crow input{flex:1;width:100%}
 .ctot{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-weight:800;margin:8px 0 6px}
 </style>
@@ -153,17 +155,18 @@ function login(msg=""){
 const CASH_H=["08.00 – 09.00","09.00 – 10.00","10.00 – 11.00","11.00 – 12.00","12.00 – 13.00"],PER_JAM=300000,TARGET=PER_JAM*CASH_H.length;
 const rp=n=>"Rp"+(+n||0).toLocaleString("id-ID");
 const cashSum=a=>(a||[]).reduce((s,v)=>s+(+v||0),0);
-const cashTag=x=>x.kind==="cash"?`<span class="tag">Cash ${rp(cashSum(x.cash))}</span>`:"";
+const cashOk=a=>(a||[]).filter(v=>(+v||0)>=PER_JAM).length;
+const cashTag=x=>x.kind==="cash"?`<span class="tag">Cash ${rp(cashSum(x.cash))} · ${cashOk(x.cash)}/${CASH_H.length}</span>`:"";
 function cashBox(t){
   const c=t.cash||[],isDone=t.status==="done",tot=cashSum(c),pct=Math.min(100,Math.round(tot/TARGET*100));
-  return `<div class="extra"><div class="cash">${CASH_H.map((h,i)=>`<div class="crow"><label for="c${t.id}-${i}">${h}</label><input id="c${t.id}-${i}" data-cash="${t.id}" type="number" inputmode="numeric" min="0" step="1000" placeholder="${PER_JAM}" value="${c[i]==null?"":c[i]}" ${isDone?"disabled":""}></div>`).join("")}<div class="ctot"><span>Total: <span data-ctot="${t.id}">${rp(tot)}</span></span><span>Target ${rp(TARGET)}</span></div><div class="bar" style="margin:0"><i data-cbar="${t.id}" style="width:${pct}%"></i></div></div></div>`;
+  return `<div class="extra"><div class="cash">${CASH_H.map((h,i)=>`<div class="crow"><label for="c${t.id}-${i}">${h}</label><input id="c${t.id}-${i}" data-cash="${t.id}" type="number" inputmode="numeric" min="0" step="1000" placeholder="${PER_JAM}" value="${c[i]==null?"":c[i]}" ${isDone?"disabled":""}><span class="hk ${(+c[i]||0)>=PER_JAM?"on":""}" data-hk="${t.id}-${i}">${(+c[i]||0)>=PER_JAM?"✓":""}</span></div>`).join("")}<div class="ctot"><span>Total: <span data-ctot="${t.id}">${rp(tot)}</span></span><span>Target ${rp(TARGET)}</span></div><div class="bar" style="margin:0"><i data-cbar="${t.id}" style="width:${pct}%"></i></div></div></div>`;
 }
 function empTask(t){
   const labs=labsOf(t),pa=t.proof_paths||[],isDone=t.status==="done",np=t.need_photo===false;
   const n=labs?labs.length:1,have=isDone?n:(labs?labs.filter((_,i)=>pa[i]).length:0);
-  const lead=np?`<button class="chk" ${isDone?"disabled":`data-dn="${t.id}" aria-label="Tandai selesai"`}>${isDone?"✓":""}</button>`:labs?`<span class="cnt">${have}/${n}</span>`:`<button class="chk" ${isDone?"disabled":`data-up="${t.id}" data-slot="1" aria-label="Kirim foto bukti"`}>${isDone?"✓":"+"}</button>`;
+  const lead=t.kind==="cash"?`<span class="cnt" data-cnt="${t.id}">${isDone?CASH_H.length:cashOk(t.cash)}/${CASH_H.length}</span>`:np?`<button class="chk" ${isDone?"disabled":`data-dn="${t.id}" aria-label="Tandai selesai"`}>${isDone?"✓":""}</button>`:labs?`<span class="cnt">${have}/${n}</span>`:`<button class="chk" ${isDone?"disabled":`data-up="${t.id}" data-slot="1" aria-label="Kirim foto bukti"`}>${isDone?"✓":"+"}</button>`;
   const slots=labs?`<div class="slots">${labs.map((l,i)=>{const h=isDone||pa[i];return `<button class="slot ${h?"has":""}" ${isDone?"disabled":`data-up="${t.id}" data-slot="${i+1}"`} aria-label="Foto ${esc(l)}"><b>${h?"✓":"+"}</b><span>${esc(l)}</span></button>`}).join("")}</div>`:"";
-  const info=np?(t.kind==="cash"?"Mulai 08.00 sampai 13.00. Kurleb Rp300rb per jam, total 5 jam Rp1,5jt.":""):labs?`${n} foto: ${labs.map(x=>esc(x)).join(", ")}`:"1 foto bukti";
+  const info=np?(t.kind==="cash"?"Mulai 08.00 sampai 13.00. Isi nominal tiap jam: Rp300rb = 1 ceklis. Tugas selesai otomatis kalau kelima jam lengkap (Rp1,5jt).":""):labs?`${n} foto: ${labs.map(x=>esc(x)).join(", ")}`:"1 foto bukti";
   return `<div class="task ${t.status}">${lead}<span class="tt">${esc(t.title)}${info?`<div class="sub">${info}</div>`:""}</span>${tag(t)}${slots}${t.kind==="cash"?cashBox(t):""}</div>`;
 }
 
@@ -310,14 +313,19 @@ app.onclick=async e=>{
     toast(error?"Gagal: "+error.message:"Bukti ditolak");return leader()}
 };
 app.oninput=e=>{const id=e.target.dataset.cash;if(!id)return;
-  const tot=cashSum([...document.querySelectorAll(`[data-cash="${id}"]`)].map(x=>x.value));
+  const vals=[...document.querySelectorAll(`[data-cash="${id}"]`)].map(x=>+x.value||0),tot=cashSum(vals);
+  vals.forEach((v,i)=>{const h=document.querySelector(`[data-hk="${id}-${i}"]`);if(h){h.textContent=v>=PER_JAM?"✓":"";h.classList.toggle("on",v>=PER_JAM)}});
+  const cn=document.querySelector(`[data-cnt="${id}"]`);if(cn)cn.textContent=cashOk(vals)+"/"+CASH_H.length;
   document.querySelector(`[data-ctot="${id}"]`).textContent=rp(tot);
   document.querySelector(`[data-cbar="${id}"]`).style.width=Math.min(100,Math.round(tot/TARGET*100))+"%"};
 app.onchange=async e=>{
   if(e.target.id==="hd"&&e.target.value){hdate=e.target.value;return history()}
   const id=e.target.dataset.cash;if(!id)return;
   const v=[...document.querySelectorAll(`[data-cash="${id}"]`)].map(x=>Math.max(0,Math.round(+x.value||0)));
-  const{error}=await db.rpc("save_cash",{p_task:+id,p_cash:v});toast(error?"Gagal: "+error.message:"Nominal tersimpan")};
+  const{error}=await db.rpc("save_cash",{p_task:+id,p_cash:v});
+  if(error)return toast("Gagal: "+error.message);
+  if(cashOk(v)===CASH_H.length){toast("Print Cash selesai");return employee()}
+  toast("Nominal tersimpan")};
 boot();
 </script>
 </body>
