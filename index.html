@@ -196,7 +196,7 @@ async function employee(){
   const[a,b]=await Promise.all([db.from("tasks").select("*").eq("assignee",me.id).order("status",{ascending:false}).order("due").order("id"),db.rpc("leaderboard")]);
   if(a.error||b.error)return toast("Gagal memuat data");
   const T=await withPhotos(a.data),L=b.data,rank=L.findIndex(x=>x.id===me.id)+1;
-  const V=T.filter(t=>t.status==="todo"||t.due>=today());
+  const V=T.filter(t=>t.due===today());
   const done=V.filter(t=>t.status==="done").length,pct=V.length?Math.round(done/V.length*100):0;
   app.innerHTML=head()+`<div class="card"><div class="split"><b class="big">${done}/${V.length} tugas selesai</b><b>${T.reduce((s,t)=>s+pt(t),0)} poin · peringkat ${rank?"#"+rank:"-"}</b></div><div class="bar"><i style="width:${pct}%"></i></div><div class="sub">Daftar tetap muncul otomatis setiap hari. Ketuk kotak untuk menandai selesai, atau untuk mengirim foto bukti.</div></div>
   <div class="grid"><div class="card"><h2>Tugas hari ini</h2>${V.length?V.map(empTask).join(""):'<div class="empty">Belum ada tugas.</div>'}</div>
