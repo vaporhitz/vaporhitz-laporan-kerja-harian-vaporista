@@ -193,14 +193,16 @@ function celebrate(points){
   document.body.appendChild(d);
 }
 async function employee(){
-  const[a,b]=await Promise.all([db.from("tasks").select("*").eq("assignee",me.id).order("status",{ascending:false}).order("due").order("id"),db.rpc("leaderboard")]);
+  const[a,b,c]=await Promise.all([db.from("tasks").select("*").eq("assignee",me.id).order("status",{ascending:false}).order("due").order("id"),db.rpc("leaderboard"),db.rpc("leaderboard_today")]);
   if(a.error||b.error)return toast("Gagal memuat data");
   const T=await withPhotos(a.data),L=b.data,rank=L.findIndex(x=>x.id===me.id)+1;
   const V=T.filter(t=>t.due===today());
   const done=V.filter(t=>t.status==="done").length,pct=V.length?Math.round(done/V.length*100):0;
+  const H=Object.fromEntries((c.data||[]).map(x=>[x.id,x]));
+  const hari=p=>p.id===me.id?`${done}/${V.length} tugas hari ini`:H[p.id]?`${H[p.id].done}/${H[p.id].total} tugas hari ini`:"";
   app.innerHTML=head()+`<div class="card"><div class="split"><b class="big">${done}/${V.length} tugas selesai</b><b>${T.reduce((s,t)=>s+pt(t),0)} poin · peringkat ${rank?"#"+rank:"-"}</b></div><div class="bar"><i style="width:${pct}%"></i></div><div class="sub">Daftar tetap muncul otomatis setiap hari. Ketuk kotak untuk menandai selesai, atau untuk mengirim foto bukti.</div></div>
   <div class="grid"><div class="card"><h2>Tugas hari ini</h2>${V.length?V.map(empTask).join(""):'<div class="empty">Belum ada tugas.</div>'}</div>
-  <div class="card"><h2>Leaderboard</h2>${L.map((p,i)=>`<div class="lb" style="cursor:default"><span class="rk ${i<3?"g":""}">${i+1}</span><span class="nm">${esc(p.name)}${p.id===me.id?" (saya)":""}<div class="sub">${p.done}/${p.total} tugas</div></span><span class="pts">${p.points}</span></div>`).join("")}</div></div>
+  <div class="card"><h2>Leaderboard</h2>${L.map((p,i)=>`<div class="lb" style="cursor:default"><span class="rk ${i<3?"g":""}">${i+1}</span><span class="nm">${esc(p.name)}${p.id===me.id?" (saya)":""}<div class="sub">${hari(p)}</div></span><span class="pts">${p.points}</span></div>`).join("")}</div></div>
   <div class="note">Tugas yang wajib foto dihitung selesai setelah semua fotonya terkirim.</div>`;
   if(V.length&&done===V.length)celebrate(T.reduce((s,t)=>s+pt(t),0));
 }
@@ -209,7 +211,9 @@ async function leader(){
   const[l,p,t,f,tp]=await Promise.all([db.rpc("leaderboard"),db.from("profiles").select("id,name").eq("role","employee").order("name"),db.from("tasks").select("*").order("due").order("id"),db.from("tasks").select("title,done_at,on_time,profiles(name)").eq("status","done").order("done_at",{ascending:false}).limit(10),db.from("task_templates").select("*").order("id")]);
   if(l.error||p.error||t.error)return toast("Gagal memuat data");
   const L=l.data,P=p.data,T=await withPhotos(t.data);PEOPLE=P;if(!sel||!P.find(x=>x.id===sel))sel=P[0]?.id;
-  const done=T.filter(x=>x.status==="done").length,late=T.filter(x=>x.status==="todo"&&x.due<today()).length,mine=T.filter(x=>x.assignee===sel);
+  const td=today(),V=T.filter(x=>x.due===td);
+  const done=V.filter(x=>x.status==="done").length,late=V.filter(x=>x.status==="todo"&&x.due_time&&nowHM()>x.due_time).length,mine=T.filter(x=>x.assignee===sel&&x.due>=td);
+  const hari=id=>{const a=V.filter(x=>x.assignee===id);return `${a.filter(x=>x.status==="done").length}/${a.length}`};
   const nm=id=>P.find(x=>x.id===id)?.name||"";const TP=tp.data||[];
   const taskRow=x=>{
     const labs=labsOf(x),list=(x.proof_paths||[]).map((pp,i)=>[pp,i]).filter(z=>z[0]);
@@ -222,8 +226,8 @@ async function leader(){
     const labs=labsOf(x);
     return `<div class="task"><span class="tt">${esc(x.title)}<div class="sub">${x.assignee?esc(nm(x.assignee)||"Vaporista"):"Semua Vaporista"} · ${dayText(x.days)}${x.due_time?" · jam "+esc(x.due_time).replace(":","."):""} · ${labs?labs.length+" foto: "+labs.map(y=>esc(y)).join(", "):(x.need_photo===false?"tanpa foto":"1 foto")}</div></span><button class="ed" data-te="${x.id}">Ubah</button><button class="ed red" data-td="${x.id}">Hapus</button></div>`;
   };
-  app.innerHTML=head()+nav("home")+`<div class="stats"><div class="stat"><b>${done}/${T.length}</b><span>Tugas tim selesai</span></div><div class="stat"><b>${T.length?Math.round(done/T.length*100):0}%</b><span>Progres tim</span></div><div class="stat"><b style="color:var(--red)">${late}</b><span>Terlambat</span></div></div>
-  <div class="grid"><div><div class="card"><h2>Leaderboard</h2>${L.length?L.map((x,i)=>`<button class="lb ${x.id===sel?"on":""}" data-p="${x.id}"><span class="rk ${i<3?"g":""}">${i+1}</span><span class="nm">${esc(x.name)}<div class="sub">${x.done}/${x.total} tugas</div></span><span class="pts">${x.points}</span></button>`).join(""):'<div class="empty">Belum ada karyawan.</div>'}</div>
+  app.innerHTML=head()+nav("home")+`<div class="stats"><div class="stat"><b>${done}/${V.length}</b><span>Tugas tim hari ini</span></div><div class="stat"><b>${V.length?Math.round(done/V.length*100):0}%</b><span>Progres hari ini</span></div><div class="stat"><b style="color:var(--red)">${late}</b><span>Terlambat</span></div></div>
+  <div class="grid"><div><div class="card"><h2>Leaderboard</h2>${L.length?L.map((x,i)=>`<button class="lb ${x.id===sel?"on":""}" data-p="${x.id}"><span class="rk ${i<3?"g":""}">${i+1}</span><span class="nm">${esc(x.name)}<div class="sub">${hari(x.id)} tugas hari ini</div></span><span class="pts">${x.points}</span></button>`).join(""):'<div class="empty">Belum ada karyawan.</div>'}</div>
   <div class="card"><h2>Tugas ${esc(nm(sel))}</h2>${mine.length?mine.map(taskRow).join(""):'<div class="empty">Belum ada tugas.</div>'}</div></div>
   <div><div class="card" id="fm"><h2>Tambah tugas</h2>
     <label class="fld">Untuk siapa<select id="na"><option value="all">Semua Vaporista</option>${P.map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join("")}</select></label>
