@@ -126,7 +126,7 @@ const dstr=()=>new Date().toLocaleDateString("id-ID",{weekday:"long",day:"numeri
 const HARI=[["1","Sen"],["2","Sel"],["3","Rab"],["4","Kam"],["5","Jum"],["6","Sab"],["0","Min"]];
 const dayText=d=>!d||d.length>=7?"Setiap hari":HARI.filter(h=>d.includes(+h[0])).map(h=>h[1]).join(", ");
 const labsOf=t=>t.photo_labels&&t.photo_labels.length>1?t.photo_labels:null;
-const parseLabs=s=>String(s||"").split(",").map(x=>x.trim()).filter(Boolean);
+const DUA_FOTO=["Foto 1","Foto 2"];
 let me,sel=null,pend=null,PEOPLE=[],hdate=null;
 async function withPhotos(T){
   const ids=T.filter(t=>t.status==="todo").map(t=>t.id);if(!ids.length)return T;
@@ -232,8 +232,9 @@ async function leader(){
   <div><div class="card" id="fm"><h2>Tambah tugas</h2>
     <label class="fld">Untuk siapa<select id="na"><option value="all">Semua Vaporista</option>${P.map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join("")}</select></label>
     <label class="fld">Judul tugas<input id="nt" placeholder="Contoh: Bersih-bersih teras"></label>
-    <div class="box"><label class="opt"><input type="checkbox" id="nm" data-sync> Butuh lebih dari 1 foto</label>
-      <div id="nlw" hidden><label class="fld">Nama tiap foto, pisahkan dengan koma<input id="nl" placeholder="Instagram, WhatsApp, Channel"></label><div class="sub">Tugas selesai kalau semua foto sudah terkirim.</div></div></div>
+    <div class="box"><b>Jumlah foto bukti</b>
+      <label class="opt"><input type="radio" name="foto" value="1" checked> 1 foto</label>
+      <label class="opt"><input type="radio" name="foto" value="2"> 2 foto</label></div>
     <div class="box"><label class="opt"><input type="checkbox" id="np"> Tanpa foto (cukup dicentang)</label><label class="fld">Jam tenggat (boleh dikosongkan)<input id="ntm" type="time"></label></div>
     <div class="box"><b>Berlaku</b>
       <label class="opt"><input type="radio" name="mode" value="daily" checked data-sync> Setiap hari</label>
@@ -271,7 +272,7 @@ async function history(){
 
 function syncForm(){
   const m=document.querySelector("input[name=mode]:checked").value;
-  $("#dw").hidden=m!=="days";$("#dd").hidden=m!=="once";$("#nlw").hidden=!$("#nm").checked;
+  $("#dw").hidden=m!=="days";$("#dd").hidden=m!=="once";
 }
 function shrink(f){return new Promise((ok,no)=>{const im=new Image();im.onload=()=>{const s=Math.min(1,900/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=im.width*s;c.height=im.height*s;c.getContext("2d").drawImage(im,0,0,c.width,c.height);c.toBlob(b=>b?ok(b):no(Error("Gambar gagal diproses")),"image/jpeg",.75)};im.onerror=()=>no(Error("File bukan gambar"));im.src=URL.createObjectURL(f)})}
 async function upload(id,slot,file){
@@ -297,8 +298,7 @@ app.onclick=async e=>{
   if(g("p")){sel=g("p").dataset.p;return leader()}
   if(g("add")){
     const title=$("#nt").value.trim();if(!title)return toast("Isi judul tugas");
-    let labels=null;
-    if($("#nm").checked&&!$("#np").checked){labels=parseLabs($("#nl").value);if(labels.length<2)return toast("Isi minimal 2 nama foto, pisahkan dengan koma")}
+    const labels=!$("#np").checked&&document.querySelector("input[name=foto]:checked").value==="2"?DUA_FOTO:null;
     const nop=$("#np").checked,dtm=$("#ntm").value||null,who=$("#na").value,mode=document.querySelector("input[name=mode]:checked").value;
     if(mode==="once"){
       const due=$("#nd").value;if(!due)return toast("Pilih tanggal");
@@ -315,8 +315,10 @@ app.onclick=async e=>{
   }
   if(g("te")){const id=+g("te").dataset.te,t=(await db.from("task_templates").select("title,photo_labels").eq("id",id).single()).data;
     const title=prompt("Judul tugas tetap:",t.title);if(!title||!title.trim())return;
-    const lt=prompt("Nama tiap foto, pisahkan dengan koma. Kosongkan kalau cukup 1 foto:",(t.photo_labels||[]).join(", "));if(lt===null)return;
-    const pl=parseLabs(lt),labels=pl.length>1?pl:null;
+    const lama=t.photo_labels&&t.photo_labels.length>1?t.photo_labels.length:1;
+    const jf=prompt("Jumlah foto bukti (ketik 1 atau 2):",lama);if(jf===null)return;
+    const n=+jf.trim();if(n!==lama&&n!==1&&n!==2)return toast("Jumlah foto hanya bisa 1 atau 2");
+    const labels=n===lama?(lama>1?t.photo_labels:null):(n===2?DUA_FOTO:null);
     const{error}=await db.from("task_templates").update({title:title.trim(),photo_labels:labels}).eq("id",id);
     if(!error){
       await db.from("tasks").update({title:title.trim()}).eq("template_id",id).eq("status","todo").gte("due",today());
